@@ -22,7 +22,7 @@ class SingleObject:  # pylint:disable=too-few-public-methods
 class MultiObject:
     def __init__(self, origin_data: Dict[str, Any]):
         self.__origin_data: Dict[str, Any] = origin_data
-        content: List[Dict[str, Any]] = origin_data["content"]
+        content: List[Dict[str, Any]] = _content if (_content := origin_data["content"]) else []  # noqa:E501
         assert (length := len(content)) == origin_data["total"], f"Unexpected content length: {length}"  # noqa:E501
         self.__objects: List[SingleObject] = [SingleObject(item) for item in content]  # noqa:E501
 
