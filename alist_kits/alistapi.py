@@ -4,8 +4,11 @@
 Reference: https://alist.nn.ci/zh/guide/api/
 """
 
+from os.path import join
 from typing import Any
 from typing import Dict
+from typing import Iterable
+from typing import List
 from urllib.parse import urljoin
 
 from xkits_lib import TimeUnit
@@ -34,6 +37,24 @@ class FS:  # pylint:disable=too-few-public-methods
     def base(self) -> str:
         """base url"""
         return self.__base_url
+
+    def search_with_list(self, keywords: str, parent: str = "/") -> Iterable[SingleObject]:  # noqa:E501
+        """search with list api (when 403 Client Error occurs)"""
+        objects: List[SingleObject] = []
+        subdirs: List[SingleObject] = []
+        for item in self.list(parent):
+            if keywords in item["name"]:
+                origin = item.origin
+                origin.setdefault("parent", parent)
+                objects.append(SingleObject(origin))
+            if item["is_dir"]:
+                subdirs.append(item)
+        for item in subdirs:
+            try:
+                objects.extend(self.search_with_list(keywords, join(parent, item["name"])))  # noqa:E501
+            except Warning:
+                continue
+        return objects
 
     def list(self, path: str = "/") -> MultiObject:
         url = urljoin(self.base, "/api/fs/list")
